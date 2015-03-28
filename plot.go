@@ -483,11 +483,18 @@ func (p *Plot) WriterTo(w, h vg.Length, format string) (io.WriterTo, error) {
 // Supported extensions are:
 //
 //  .eps, .jpg, .jpeg, .pdf, .png, .svg, .tif and .tiff.
-func (p *Plot) Save(w, h vg.Length, file string) error {
+func (p *Plot) Save(w, h vg.Length, file string) (err error) {
 	f, err := os.Create(file)
 	if err != nil {
 		return err
 	}
+	defer func() {
+		e := f.Close()
+		if err == nil {
+			err = e
+		}
+	}()
+
 	format := strings.ToLower(filepath.Ext(file))
 	if len(format) != 0 {
 		format = format[1:]
@@ -496,9 +503,7 @@ func (p *Plot) Save(w, h vg.Length, file string) error {
 	if err != nil {
 		return err
 	}
+
 	_, err = c.WriteTo(f)
-	if err != nil {
-		return err
-	}
-	return f.Close()
+	return err
 }
